@@ -7,7 +7,6 @@ import Features from './components/Features'
 import Audience from './components/Audience'
 import Ecosystem from './components/Ecosystem'
 import Pricing from './components/Pricing'
-import Contact from './components/Contact'
 import Footer from './components/Footer'
 import LoginView from './components/auth/LoginView'
 import RecoveryView from './components/auth/RecoveryView'
@@ -32,7 +31,6 @@ function LandingPage() {
       <Audience />
       <Ecosystem />
       <Pricing />
-      <Contact />
       <Footer />
     </div>
   )

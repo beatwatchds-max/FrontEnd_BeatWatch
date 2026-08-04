@@ -161,6 +161,7 @@ export default function StepPayment() {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 placeholder="correo@ejemplo.com"
+                onKeyPress={(e) => { if (/[áéíóúñÁÉÍÓÚÑ]/.test(e.key)) e.preventDefault() }}
                 className={getInputClass('email')}
               />
               {errors.email && touched.email && (

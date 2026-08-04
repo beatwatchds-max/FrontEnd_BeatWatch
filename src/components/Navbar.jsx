@@ -7,7 +7,6 @@ export default function Navbar() {
     { label: 'Funciones', href: '#funciones' },
     { label: 'Planes', href: '#planes' },
     { label: 'Nosotros', href: '#nosotros' },
-    { label: 'Contacto', href: '#contacto' },
   ]
 
   return (

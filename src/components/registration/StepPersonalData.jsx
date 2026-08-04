@@ -26,13 +26,14 @@ export default function StepPersonalData() {
   const [loading, setLoading] = useState(false)
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  const phoneRegex = /^\+?\d{7,15}$/
+  const phoneRegex = /^\d{10}$/
 
   const validate = (name, value) => {
     switch (name) {
       case 'nombre':
         if (!value.trim()) return 'El nombre es obligatorio'
         if (value.trim().length < 2) return 'Mínimo 2 caracteres'
+        if (!/^[a-zA-ZáéíóúñÁÉÍÓÚÑ\s]+$/.test(value.trim())) return 'Solo letras y espacios'
         return ''
       case 'email':
         if (!value.trim()) return 'El correo es obligatorio'
@@ -40,7 +41,7 @@ export default function StepPersonalData() {
         return ''
       case 'telefono':
         if (!value.trim()) return 'El teléfono es obligatorio'
-        if (!phoneRegex.test(value.replace(/\s/g, ''))) return 'Teléfono inválido (7-15 dígitos)'
+        if (!/^\d{10}$/.test(value)) return 'Teléfono inválido (10 dígitos)'
         return ''
       case 'password':
         if (!value) return 'La contraseña es obligatoria'
@@ -164,6 +165,7 @@ export default function StepPersonalData() {
                 placeholder="Juan Pérez García"
                 required
                 maxLength={100}
+                onKeyPress={(e) => { if (!/[a-zA-ZáéíóúñÁÉÍÓÚÑ\s]/.test(e.key)) e.preventDefault() }}
                 className={getInputClass('nombre')}
               />
             {errors.nombre && touched.nombre && (
@@ -187,6 +189,7 @@ export default function StepPersonalData() {
                 onBlur={handleBlur}
                 placeholder="correo@ejemplo.com"
                 required
+                onKeyPress={(e) => { if (/[áéíóúñÁÉÍÓÚÑ]/.test(e.key)) e.preventDefault() }}
                 className={getInputClass('email')}
               />
               {errors.email && touched.email && (
@@ -208,8 +211,8 @@ export default function StepPersonalData() {
                 onBlur={handleBlur}
                 placeholder="5512345678"
                 required
-                maxLength={15}
-                onKeyPress={(e) => { if (!/[0-9+]/.test(e.key)) e.preventDefault() }}
+                maxLength={10}
+                onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) e.preventDefault() }}
                 className={getInputClass('telefono')}
               />
               {errors.telefono && touched.telefono && (
@@ -258,6 +261,8 @@ export default function StepPersonalData() {
                     value={form.empresa}
                     onChange={handleChange}
                     placeholder="Nombre de la empresa"
+                    maxLength={100}
+                    onKeyPress={(e) => { if (/[áéíóúñÁÉÍÓÚÑ]/.test(e.key)) e.preventDefault() }}
                     className="border border-slate-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none w-full transition-all duration-300 ease-in-out"
                   />
                 </div>
@@ -271,6 +276,7 @@ export default function StepPersonalData() {
                     onBlur={handleBlur}
                     placeholder="XAXX010101000"
                     maxLength={13}
+                    onKeyPress={(e) => { if (!/[a-zA-Z0-9]/.test(e.key)) e.preventDefault() }}
                     className="border border-slate-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none w-full transition-all duration-300 ease-in-out"
                   />
                 </div>
@@ -284,6 +290,7 @@ export default function StepPersonalData() {
                     value={form.direccion}
                     onChange={handleChange}
                     placeholder="Calle, número, colonia"
+                    maxLength={200}
                     className="border border-slate-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none w-full transition-all duration-300 ease-in-out"
                   />
                 </div>
@@ -295,6 +302,8 @@ export default function StepPersonalData() {
                     value={form.ciudad}
                     onChange={handleChange}
                     placeholder="Ciudad de México, CDMX"
+                    maxLength={100}
+                    onKeyPress={(e) => { if (/[áéíóúñÁÉÍÓÚÑ]/.test(e.key)) e.preventDefault() }}
                     className="border border-slate-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none w-full transition-all duration-300 ease-in-out"
                   />
                 </div>
