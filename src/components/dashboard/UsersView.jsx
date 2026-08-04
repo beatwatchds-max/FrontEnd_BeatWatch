@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Plus, X, Hash, Users, AlertCircle } from 'lucide-react'
+import { Plus, X, Users, AlertCircle } from 'lucide-react'
 import apiClient from '../../api/client'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const phoneRegex = /^\+?\d{7,15}$/
 
 function getInitials(name) {
   return name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)
@@ -27,7 +26,6 @@ export default function UsersView() {
     nombreCompleto: '',
     correo: '',
     telefono: '',
-    idLicencia: '',
   })
   const [fieldErrors, setFieldErrors] = useState({})
   const [touched, setTouched] = useState({})
@@ -63,7 +61,7 @@ export default function UsersView() {
         if (!emailRegex.test(value)) return 'Formato de correo inválido'
         return ''
       case 'telefono':
-        if (value && !phoneRegex.test(value.replace(/\s/g, ''))) return 'Teléfono inválido (7-15 dígitos)'
+        if (value && !/^\d{10}$/.test(value)) return 'Teléfono inválido (10 dígitos)'
         return ''
       default:
         return ''
@@ -117,13 +115,12 @@ export default function UsersView() {
         nombreCompleto: form.nombreCompleto,
         correo: form.correo,
         telefono: form.telefono || '',
-        idLicencia: form.idLicencia || '',
       }
 
       console.log('Payload registro paciente:', payload)
       await apiClient.post('/api/Pacientes/registrar', payload)
 
-      setForm({ nombreCompleto: '', correo: '', telefono: '', idLicencia: '' })
+      setForm({ nombreCompleto: '', correo: '', telefono: '' })
       setShowForm(false)
       fetchUsers()
     } catch (err) {
@@ -244,7 +241,9 @@ export default function UsersView() {
                   value={form.telefono}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  placeholder="+52 55 1234 5678"
+                  placeholder="5512345678"
+                  maxLength={10}
+                  onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) e.preventDefault() }}
                   className={getInputClass('telefono')}
                 />
                 {fieldErrors.telefono && touched.telefono && (
@@ -270,17 +269,6 @@ export default function UsersView() {
                   <AlertCircle className="w-3 h-3" />{fieldErrors.correo}
                 </p>
               )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">ID Licencia</label>
-              <input
-                type="text"
-                name="idLicencia"
-                value={form.idLicencia}
-                onChange={handleChange}
-                placeholder="ID de licencia (opcional)"
-                className="border border-slate-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none w-full transition-all duration-300 ease-in-out"
-              />
             </div>
 
             <div className="flex gap-3 mt-6">
