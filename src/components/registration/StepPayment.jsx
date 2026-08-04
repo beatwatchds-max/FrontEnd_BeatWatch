@@ -67,7 +67,7 @@ export default function StepPayment() {
         return ''
       case 'cvv':
         if (!value.trim()) return 'El CVV es obligatorio'
-        if (!/^\d{3,4}$/.test(value)) return 'CVV inválido (3-4 dígitos)'
+        if (!/^\d{3}$/.test(value)) return 'CVV inválido (3 dígitos)'
         return ''
       default:
         return ''
@@ -80,7 +80,7 @@ export default function StepPayment() {
 
     if (name === 'cardNumber') formatted = formatCardNumber(value)
     else if (name === 'expDate') formatted = formatExpDate(value)
-    else if (name === 'cvv') formatted = value.replace(/\D/g, '').slice(0, 4)
+    else if (name === 'cvv') formatted = value.replace(/\D/g, '').slice(0, 3)
     else if (name === 'cardName') formatted = value.replace(/[^a-zA-ZáéíóúñÁÉÍÓÚÑ\s]/g, '')
 
     setForm((prev) => ({ ...prev, [name]: formatted }))
@@ -240,7 +240,7 @@ export default function StepPayment() {
                         onChange={handleChange}
                         onBlur={handleBlur}
                         placeholder="123"
-                        maxLength={4}
+                        maxLength={3}
                         onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) e.preventDefault() }}
                         className={getInputClass('cvv')}
                       />
