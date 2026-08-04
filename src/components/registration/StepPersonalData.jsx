@@ -155,16 +155,17 @@ export default function StepPersonalData() {
             <label className="block text-sm font-medium text-slate-700 mb-1">
               Nombre Completo <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
-              name="nombre"
-              value={form.nombre}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Juan Pérez García"
-              required
-              className={getInputClass('nombre')}
-            />
+              <input
+                type="text"
+                name="nombre"
+                value={form.nombre}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                placeholder="Juan Pérez García"
+                required
+                maxLength={100}
+                className={getInputClass('nombre')}
+              />
             {errors.nombre && touched.nombre && (
               <p className="text-red-500 text-xs mt-1 flex items-center gap-1 animate-fade-in">
                 <AlertCircle className="w-3 h-3" />
@@ -205,8 +206,10 @@ export default function StepPersonalData() {
                 value={form.telefono}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                placeholder="+52 5512345678"
+                placeholder="5512345678"
                 required
+                maxLength={15}
+                onKeyPress={(e) => { if (!/[0-9+]/.test(e.key)) e.preventDefault() }}
                 className={getInputClass('telefono')}
               />
               {errors.telefono && touched.telefono && (
@@ -264,8 +267,10 @@ export default function StepPersonalData() {
                     type="text"
                     name="rfc"
                     value={form.rfc}
-                    onChange={handleChange}
+                    onChange={(e) => setForm((prev) => ({ ...prev, rfc: e.target.value.toUpperCase() }))}
+                    onBlur={handleBlur}
                     placeholder="XAXX010101000"
+                    maxLength={13}
                     className="border border-slate-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none w-full transition-all duration-300 ease-in-out"
                   />
                 </div>

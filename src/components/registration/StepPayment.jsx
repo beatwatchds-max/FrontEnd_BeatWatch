@@ -1,14 +1,27 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CreditCard, Wallet, Building, Lock, Check, Shield, AlertCircle } from 'lucide-react'
+import useRegistrationStore from '../../store/registrationStore'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+const formatCardNumber = (value) => {
+  const digits = value.replace(/\D/g, '').slice(0, 16)
+  return digits.replace(/(\d{4})(?=\d)/g, '$1 ')
+}
+
+const formatExpDate = (value) => {
+  const digits = value.replace(/\D/g, '').slice(0, 4)
+  if (digits.length >= 3) return digits.slice(0, 2) + '/' + digits.slice(2)
+  return digits
+}
 
 export default function StepPayment() {
   const [activeMethod, setActiveMethod] = useState('card')
   const navigate = useNavigate()
   const [errors, setErrors] = useState({})
   const [touched, setTouched] = useState({})
+  const setStep2Completed = useRegistrationStore((s) => s.setStep2Completed)
 
   const [form, setForm] = useState({
     email: '',
@@ -42,7 +55,7 @@ export default function StepPayment() {
       case 'cardNumber':
         if (!value.trim()) return 'El número de tarjeta es obligatorio'
         const digits = value.replace(/\s/g, '')
-        if (!/^\d{13,19}$/.test(digits)) return 'Número de tarjeta inválido (13-19 dígitos)'
+        if (!/^\d{16}$/.test(digits)) return 'Número de tarjeta inválido (16 dígitos)'
         return ''
       case 'cardName':
         if (!value.trim()) return 'El nombre del titular es obligatorio'
@@ -63,9 +76,16 @@ export default function StepPayment() {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setForm((prev) => ({ ...prev, [name]: value }))
+    let formatted = value
+
+    if (name === 'cardNumber') formatted = formatCardNumber(value)
+    else if (name === 'expDate') formatted = formatExpDate(value)
+    else if (name === 'cvv') formatted = value.replace(/\D/g, '').slice(0, 4)
+    else if (name === 'cardName') formatted = value.replace(/[^a-zA-ZáéíóúñÁÉÍÓÚÑ\s]/g, '')
+
+    setForm((prev) => ({ ...prev, [name]: formatted }))
     if (touched[name]) {
-      setErrors((prev) => ({ ...prev, [name]: validate(name, value) }))
+      setErrors((prev) => ({ ...prev, [name]: validate(name, formatted) }))
     }
   }
 
@@ -83,6 +103,7 @@ export default function StepPayment() {
 
   const handlePay = () => {
     if (activeMethod !== 'card') {
+      setStep2Completed()
       navigate('/registro/confirmacion')
       return
     }
@@ -99,6 +120,7 @@ export default function StepPayment() {
     setTouched(requiredFields.reduce((acc, f) => ({ ...acc, [f]: true }), {}))
     if (hasError) return
 
+    setStep2Completed()
     navigate('/registro/confirmacion')
   }
 
@@ -161,6 +183,8 @@ export default function StepPayment() {
                       onChange={handleChange}
                       onBlur={handleBlur}
                       placeholder="1234 5678 9012 3456"
+                      maxLength={19}
+                      onKeyPress={(e) => { if (!/[0-9\s]/.test(e.key)) e.preventDefault() }}
                       className={getInputClass('cardNumber')}
                     />
                     {errors.cardNumber && touched.cardNumber && (
@@ -196,6 +220,8 @@ export default function StepPayment() {
                         onChange={handleChange}
                         onBlur={handleBlur}
                         placeholder="MM/AA"
+                        maxLength={5}
+                        onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) e.preventDefault() }}
                         className={getInputClass('expDate')}
                       />
                       {errors.expDate && touched.expDate && (
@@ -213,6 +239,8 @@ export default function StepPayment() {
                         onChange={handleChange}
                         onBlur={handleBlur}
                         placeholder="123"
+                        maxLength={4}
+                        onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) e.preventDefault() }}
                         className={getInputClass('cvv')}
                       />
                       {errors.cvv && touched.cvv && (

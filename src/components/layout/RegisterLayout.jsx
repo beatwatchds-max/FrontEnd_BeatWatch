@@ -1,8 +1,10 @@
 import { Link, useLocation, Outlet } from 'react-router-dom'
 import { ArrowLeft, Heart } from 'lucide-react'
+import useRegistrationStore from '../../store/registrationStore'
 
 export default function RegisterLayout() {
   const location = useLocation()
+  const { step1Completed, step2Completed } = useRegistrationStore()
 
   const getStepNumber = () => {
     if (location.pathname.includes('cuenta')) return 1
@@ -12,6 +14,13 @@ export default function RegisterLayout() {
   }
 
   const currentStep = getStepNumber()
+
+  const isStepAccessible = (stepNumber) => {
+    if (stepNumber <= currentStep) return true
+    if (stepNumber === 2 && step1Completed) return true
+    if (stepNumber === 3 && step2Completed) return true
+    return false
+  }
 
   const steps = [
     { number: 1, label: 'Registro', path: '/registro/cuenta' },
@@ -48,35 +57,49 @@ export default function RegisterLayout() {
 
       <div className="flex justify-center py-8 px-8">
         <div className="flex items-center gap-0 max-w-xl w-full">
-          {steps.map((step, index) => (
-            <div key={step.number} className="flex items-center flex-1 last:flex-initial">
-              <Link to={step.path} className="flex flex-col items-center group">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
-                    currentStep >= step.number
-                      ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30'
-                      : 'bg-slate-200 text-slate-500 group-hover:bg-slate-300'
-                  }`}
-                >
-                  {currentStep > step.number ? '✓' : step.number}
-                </div>
-                <span
-                  className={`text-xs mt-2 font-medium transition-colors duration-300 ${
-                    currentStep >= step.number ? 'text-blue-600' : 'text-slate-400'
-                  }`}
-                >
-                  {step.label}
-                </span>
-              </Link>
-              {index < steps.length - 1 && (
-                <div
-                  className={`h-0.5 flex-1 mx-2 mt-[-20px] transition-colors duration-500 ${
-                    currentStep > step.number ? 'bg-blue-500' : 'bg-slate-200'
-                  }`}
-                />
-              )}
-            </div>
-          ))}
+          {steps.map((step, index) => {
+            const accessible = isStepAccessible(step.number)
+            return (
+              <div key={step.number} className="flex items-center flex-1 last:flex-initial">
+                {accessible ? (
+                  <Link to={step.path} className="flex flex-col items-center group">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
+                        currentStep >= step.number
+                          ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30'
+                          : 'bg-slate-200 text-slate-500 group-hover:bg-slate-300'
+                      }`}
+                    >
+                      {currentStep > step.number ? '✓' : step.number}
+                    </div>
+                    <span
+                      className={`text-xs mt-2 font-medium transition-colors duration-300 ${
+                        currentStep >= step.number ? 'text-blue-600' : 'text-slate-400'
+                      }`}
+                    >
+                      {step.label}
+                    </span>
+                  </Link>
+                ) : (
+                  <div className="flex flex-col items-center cursor-not-allowed opacity-50">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-slate-200 text-slate-400">
+                      {step.number}
+                    </div>
+                    <span className="text-xs mt-2 font-medium text-slate-400">
+                      {step.label}
+                    </span>
+                  </div>
+                )}
+                {index < steps.length - 1 && (
+                  <div
+                    className={`h-0.5 flex-1 mx-2 mt-[-20px] transition-colors duration-500 ${
+                      currentStep > step.number ? 'bg-blue-500' : 'bg-slate-200'
+                    }`}
+                  />
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
 
