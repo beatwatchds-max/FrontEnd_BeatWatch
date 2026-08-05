@@ -2,47 +2,27 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircle, Download, CreditCard, Calendar, Mail, FileText, Check } from 'lucide-react'
 import useRegistrationStore from '../../store/registrationStore'
-
-const API_BASE = 'https://backend-beatwatch.onrender.com'
-
-function getStoredToken() {
-  try {
-    const raw = localStorage.getItem('bookstack-auth')
-    if (raw) {
-      const parsed = JSON.parse(raw)
-      if (parsed?.state?.token) return parsed.state.token
-    }
-  } catch {}
-  return localStorage.getItem('auth_token')
-}
+import apiClient from '../../api/client'
 
 export default function StepConfirmation() {
   const navigate = useNavigate()
-  const { usuarioId, correo } = useRegistrationStore()
+  const { usuarioId, correo, tipoLicencia, licenciaId } = useRegistrationStore()
   const [downloading, setDownloading] = useState(false)
 
   const handleDownloadReceipt = async () => {
-    const reciboId = usuarioId || 'ultimo'
+    const id = licenciaId || usuarioId || 'ultimo'
     setDownloading(true)
 
     try {
-      const token = getStoredToken()
-      const headers = {}
-      if (token) headers['Authorization'] = `Bearer ${token}`
+      const data = await apiClient.get(`/api/Reportes/descargar/recibo/${id}`, {
+        headers: { Accept: 'application/pdf' },
+      })
 
-      const response = await fetch(`${API_BASE}/api/Reportes/descargar/recibo/${reciboId}`, { headers })
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: No se pudo descargar el recibo`)
-      }
-
-      const blob = await response.blob()
-      console.log('RAW Recibo blob:', blob.type, blob.size)
-
+      const blob = new Blob([data], { type: 'application/pdf' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `recibo-${reciboId}.pdf`
+      a.download = `recibo-${id}.pdf`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -58,6 +38,9 @@ export default function StepConfirmation() {
   const handleGoLogin = () => {
     navigate('/login')
   }
+
+  const now = new Date()
+  const fechaStr = now.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })
 
   return (
     <div className="max-w-2xl mx-auto text-center">
@@ -78,20 +61,20 @@ export default function StepConfirmation() {
         <div className="grid grid-cols-2 gap-y-4 gap-x-8">
           <div>
             <p className="text-xs text-slate-400 uppercase tracking-wider">Plan</p>
-            <p className="text-sm font-semibold text-slate-800 mt-1">Plan DEMO - Gratis</p>
+            <p className="text-sm font-semibold text-slate-800 mt-1">Plan {tipoLicencia} - Gratis</p>
           </div>
           <div>
             <p className="text-xs text-slate-400 uppercase tracking-wider">Método de Pago</p>
             <div className="flex items-center gap-2 mt-1">
               <CreditCard className="w-4 h-4 text-slate-400" />
-              <span className="text-sm font-semibold text-slate-800">•••• 3456</span>
+              <span className="text-sm font-semibold text-slate-800">Pago registrado</span>
             </div>
           </div>
           <div>
             <p className="text-xs text-slate-400 uppercase tracking-wider">Fecha</p>
             <div className="flex items-center gap-2 mt-1">
               <Calendar className="w-4 h-4 text-slate-400" />
-              <span className="text-sm font-semibold text-slate-800">30 de Julio, 2026</span>
+              <span className="text-sm font-semibold text-slate-800">{fechaStr}</span>
             </div>
           </div>
           <div>

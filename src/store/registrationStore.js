@@ -3,11 +3,14 @@ import { create } from 'zustand'
 const useRegistrationStore = create((set) => ({
   usuarioId: null,
   correo: '',
+  tipoLicencia: 'DEMO',
+  licenciaId: null,
   step1Completed: false,
   step2Completed: false,
   setUsuarioData: (usuarioId, correo) => set({ usuarioId, correo, step1Completed: true }),
   setStep2Completed: () => set({ step2Completed: true }),
-  clearRegistration: () => set({ usuarioId: null, correo: '', step1Completed: false, step2Completed: false }),
+  setLicenciaId: (licenciaId) => set({ licenciaId }),
+  clearRegistration: () => set({ usuarioId: null, correo: '', tipoLicencia: 'DEMO', licenciaId: null, step1Completed: false, step2Completed: false }),
 }))
 
 export default useRegistrationStore

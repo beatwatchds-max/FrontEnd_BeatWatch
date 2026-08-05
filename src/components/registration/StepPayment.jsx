@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CreditCard, Wallet, Building, Lock, Check, Shield, AlertCircle } from 'lucide-react'
 import useRegistrationStore from '../../store/registrationStore'
+import apiClient from '../../api/client'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -21,10 +22,13 @@ export default function StepPayment() {
   const navigate = useNavigate()
   const [errors, setErrors] = useState({})
   const [touched, setTouched] = useState({})
-  const setStep2Completed = useRegistrationStore((s) => s.setStep2Completed)
+  const [loading, setLoading] = useState(false)
+  const [apiError, setApiError] = useState('')
+
+  const { usuarioId, correo, tipoLicencia, setLicenciaId } = useRegistrationStore()
 
   const [form, setForm] = useState({
-    email: '',
+    email: correo || '',
     cardNumber: '',
     cardName: '',
     expDate: '',
@@ -101,27 +105,52 @@ export default function StepPayment() {
     return `${base} border-slate-300 focus:ring-2 focus:ring-blue-500`
   }
 
-  const handlePay = () => {
-    if (activeMethod !== 'card') {
-      setStep2Completed()
-      navigate('/registro/confirmacion')
-      return
+  const handlePay = async () => {
+    setApiError('')
+
+    if (activeMethod === 'card') {
+      const requiredFields = ['email', 'cardNumber', 'cardName', 'expDate', 'cvv']
+      const newErrors = {}
+      let hasError = false
+      requiredFields.forEach((field) => {
+        const err = validate(field, form[field])
+        newErrors[field] = err
+        if (err) hasError = true
+      })
+      setErrors(newErrors)
+      setTouched(requiredFields.reduce((acc, f) => ({ ...acc, [f]: true }), {}))
+      if (hasError) return
     }
 
-    const requiredFields = ['email', 'cardNumber', 'cardName', 'expDate', 'cvv']
-    const newErrors = {}
-    let hasError = false
-    requiredFields.forEach((field) => {
-      const err = validate(field, form[field])
-      newErrors[field] = err
-      if (err) hasError = true
-    })
-    setErrors(newErrors)
-    setTouched(requiredFields.reduce((acc, f) => ({ ...acc, [f]: true }), {}))
-    if (hasError) return
+    setLoading(true)
 
-    setStep2Completed()
-    navigate('/registro/confirmacion')
+    try {
+      const payload = {
+        usuarioId: usuarioId || '',
+        tipoLicencia,
+        metodoPago: activeMethod,
+        correoElectronico: form.email || correo || '',
+        fechaExpiration: activeMethod === 'card' ? form.expDate : '',
+        cvv: activeMethod === 'card' ? form.cvv : '',
+        numeroTarjeta: activeMethod === 'card' ? form.cardNumber.replace(/\s/g, '') : '',
+        nombreTitular: activeMethod === 'card' ? form.cardName : '',
+      }
+
+      console.log('Payload procesar-pago:', payload)
+      const data = await apiClient.post('/api/Licencias/procesar-pago', payload)
+      console.log('Respuesta procesar-pago:', data)
+
+      const id = data.licenciaId || data.id || data.data?.licenciaId || data.data?.id
+      if (id) setLicenciaId(id)
+
+      setStep2Completed()
+      navigate('/registro/confirmacion')
+    } catch (err) {
+      console.error('Error procesar-pago:', err)
+      setApiError(err.message || 'No se pudo procesar el pago. Intenta de nuevo.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -130,6 +159,12 @@ export default function StepPayment() {
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 transition-all duration-300 ease-in-out">
           <h2 className="text-xl font-bold text-slate-800 mb-6">Método de Pago</h2>
 
+          {apiError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-6 animate-fade-in">
+              {apiError}
+            </div>
+          )}
+
           <div className="flex gap-3 mb-6">
             {paymentMethods.map((method) => {
               const Icon = method.icon
@@ -137,7 +172,7 @@ export default function StepPayment() {
                 <button
                   key={method.id}
                   type="button"
-                  onClick={() => setActiveMethod(method.id)}
+                  onClick={() => { setActiveMethod(method.id); setApiError(''); }}
                   className={`flex items-center gap-2 px-4 py-3 rounded-lg border-2 text-sm font-medium transition-all duration-300 ease-in-out ${
                     activeMethod === method.id
                       ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -280,9 +315,10 @@ export default function StepPayment() {
 
           <button
             onClick={handlePay}
-            className="w-full bg-blue-600 text-white rounded-lg px-4 py-3 font-medium transition-all duration-300 ease-in-out hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 flex items-center justify-center gap-2 mt-6"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white rounded-lg px-4 py-3 font-medium transition-all duration-300 ease-in-out hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex items-center justify-center gap-2 mt-6"
           >
-            Pagar Gratis
+            {loading ? 'Procesando...' : 'Pagar Gratis'}
           </button>
         </div>
 
@@ -290,7 +326,7 @@ export default function StepPayment() {
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 transition-all duration-300 ease-in-out">
             <h3 className="font-bold text-slate-800 mb-4">Resumen del Pedido</h3>
             <div className="flex justify-between items-center py-3 border-b border-slate-100">
-              <span className="text-sm text-slate-600">Plan DEMO</span>
+              <span className="text-sm text-slate-600">Plan {tipoLicencia}</span>
               <span className="text-sm font-semibold text-slate-800">Gratis</span>
             </div>
             <div className="flex justify-between items-center py-2 text-sm">
