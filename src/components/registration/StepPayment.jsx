@@ -25,7 +25,7 @@ export default function StepPayment() {
   const [loading, setLoading] = useState(false)
   const [apiError, setApiError] = useState('')
 
-  const { usuarioId, correo, tipoLicencia, setLicenciaId } = useRegistrationStore()
+  const { usuarioId, correo, tipoLicencia, setLicenciaId, setStep2Completed } = useRegistrationStore()
 
   const [form, setForm] = useState({
     email: correo || '',
