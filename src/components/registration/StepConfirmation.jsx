@@ -2,7 +2,19 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircle, Download, CreditCard, Calendar, Mail, FileText, Check } from 'lucide-react'
 import useRegistrationStore from '../../store/registrationStore'
-import apiClient from '../../api/client'
+
+const API_BASE = 'https://backend-beatwatch.onrender.com'
+
+function getStoredToken() {
+  try {
+    const raw = localStorage.getItem('bookstack-auth')
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (parsed?.state?.token) return parsed.state.token
+    }
+  } catch {}
+  return localStorage.getItem('auth_token')
+}
 
 export default function StepConfirmation() {
   const navigate = useNavigate()
@@ -14,11 +26,17 @@ export default function StepConfirmation() {
     setDownloading(true)
 
     try {
-      const data = await apiClient.get(`/api/Reportes/descargar/recibo/${id}`, {
-        headers: { Accept: 'application/pdf' },
-      })
+      const token = getStoredToken()
+      const headers = { Accept: 'application/pdf' }
+      if (token) headers['Authorization'] = `Bearer ${token}`
 
-      const blob = new Blob([data], { type: 'application/pdf' })
+      const response = await fetch(`${API_BASE}/api/Reportes/descargar/recibo/${id}`, { headers })
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: No se pudo descargar el recibo`)
+      }
+
+      const blob = await response.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
