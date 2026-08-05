@@ -126,14 +126,14 @@ export default function StepPayment() {
 
     try {
       const payload = {
-        usuarioId: usuarioId || '',
-        tipoLicencia,
-        metodoPago: activeMethod,
-        correoElectronico: form.email || correo || '',
-        fechaExpiration: activeMethod === 'card' ? form.expDate : '',
-        cvv: activeMethod === 'card' ? form.cvv : '',
-        numeroTarjeta: activeMethod === 'card' ? form.cardNumber.replace(/\s/g, '') : '',
-        nombreTitular: activeMethod === 'card' ? form.cardName : '',
+        UsuarioId: usuarioId || '',
+        TipoLicencia: tipoLicencia,
+        MetodoPago: activeMethod,
+        CorreoElectronico: form.email || correo || '',
+        FechaExpiration: activeMethod === 'card' ? form.expDate : '',
+        Cvv: activeMethod === 'card' ? form.cvv : '',
+        NumeroTarjeta: activeMethod === 'card' ? form.cardNumber.replace(/\s/g, '') : '',
+        NombreTitular: activeMethod === 'card' ? form.cardName : '',
       }
 
       console.log('Payload procesar-pago:', payload)
