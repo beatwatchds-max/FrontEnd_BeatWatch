@@ -140,7 +140,7 @@ export default function StepPayment() {
       const data = await apiClient.post('/api/Licencias/procesar-pago', payload)
       console.log('Respuesta procesar-pago:', data)
 
-      const id = data.licenciaId || data.id || data.data?.licenciaId || data.data?.id
+      const id = data.licencia?.id || data.licenciaId || data.id || data.data?.licencia?.id || data.data?.licenciaId || data.data?.id
       if (id) setLicenciaId(id)
 
       setStep2Completed()
